@@ -1,0 +1,672 @@
+/* ════════════════════════════════════════════
+   style.css — HackBot AI Hacker Theme
+   ════════════════════════════════════════════ */
+
+:root {
+  --bg-primary: #080d0a;
+  --bg-secondary: #0c1410;
+  --bg-panel: #101a14;
+  --bg-input: #0a110d;
+  --accent-green: #00ff41;
+  --accent-green-dim: #00aa2b;
+  --accent-cyan: #00e5ff;
+  --accent-red: #ff2244;
+  --accent-yellow: #f0c040;
+  --text-primary: #c8ffd4;
+  --text-muted: #3a5a40;
+  --border: #1a3320;
+  --border-bright: #00ff4140;
+  --font-mono: 'Fira Code', 'Courier New', monospace;
+  --sidebar-w: 240px;
+  --topbar-h: 52px;
+  --input-h: 80px;
+  --transition: 0.15s ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+body {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* ── Matrix Canvas ─────────────────────────────── */
+#matrix-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── App Shell ─────────────────────────────────── */
+#app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ── Sidebar ───────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width var(--transition), min-width var(--transition);
+}
+
+#sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  border: none;
+}
+
+#sidebar-header {
+  padding: 16px 14px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 20px;
+}
+
+.logo-text {
+  color: var(--accent-green);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+#new-chat-btn {
+  margin: 12px 10px 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--accent-green-dim);
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: left;
+}
+
+#new-chat-btn:hover {
+  background: var(--accent-green);
+  color: #000;
+}
+
+#history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-green-dim) transparent;
+}
+
+.history-item {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all var(--transition);
+}
+
+.history-item:hover {
+  color: var(--accent-green);
+  border-left-color: var(--accent-green-dim);
+  background: #00ff4108;
+}
+
+.history-item.active {
+  color: var(--accent-green);
+  border-left-color: var(--accent-green);
+}
+
+#sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#mode-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+#mode-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px;
+  cursor: pointer;
+  outline: none;
+}
+
+#mode-select:focus {
+  border-color: var(--accent-green-dim);
+}
+
+/* ── Chat Container ────────────────────────────── */
+#chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+/* ── Topbar ────────────────────────────────────── */
+#topbar {
+  height: var(--topbar-h);
+  min-height: var(--topbar-h);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--bg-panel);
+}
+
+#topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#session-name {
+  color: var(--accent-green);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.dot-green {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 6px var(--accent-green);
+  animation: pulse 2s infinite;
+}
+
+.dot-red {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  box-shadow: 0 0 6px var(--accent-red);
+  animation: pulse 2s infinite;
+}
+
+.dot-yellow {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-yellow);
+  box-shadow: 0 0 6px var(--accent-yellow);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+#status-text {
+  font-size: 11px;
+  color: var(--accent-green-dim);
+  letter-spacing: 1px;
+}
+
+#topbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+#topbar-right button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+#topbar-right button:hover {
+  border-color: var(--accent-green-dim);
+  color: var(--accent-green);
+}
+
+/* ── Messages ──────────────────────────────────── */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-green-dim) transparent;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 88%;
+}
+
+.message.user {
+  align-self: flex-end;
+}
+
+.message.bot {
+  align-self: flex-start;
+}
+
+.msg-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.bot-label {
+  color: var(--accent-green);
+}
+
+.user-label {
+  color: var(--accent-cyan);
+}
+
+.timestamp {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.msg-body {
+  padding: 12px 16px;
+  border-radius: 2px;
+  line-height: 1.7;
+  font-size: 13.5px;
+}
+
+.message.bot .msg-body {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent-green-dim);
+}
+
+.message.user .msg-body {
+  background: #001a08;
+  border: 1px solid var(--border-bright);
+  border-right: 2px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.msg-body p {
+  margin-bottom: 8px;
+}
+
+.msg-body p:last-child {
+  margin-bottom: 0;
+}
+
+.msg-body pre {
+  background: #040a06;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+  font-size: 12.5px;
+}
+
+.msg-body code {
+  font-family: var(--font-mono);
+}
+
+.msg-body p code {
+  background: #040a06;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  color: var(--accent-yellow);
+  font-size: 12px;
+}
+
+.msg-body h1,
+.msg-body h2,
+.msg-body h3 {
+  color: var(--accent-green);
+  margin: 12px 0 6px;
+}
+
+.msg-body ul,
+.msg-body ol {
+  padding-left: 20px;
+  margin: 6px 0;
+}
+
+.msg-body li {
+  margin-bottom: 4px;
+}
+
+.msg-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+.msg-body th {
+  background: var(--bg-primary);
+  color: var(--accent-green);
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+}
+
+.msg-body td {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+}
+
+.msg-body tr:nth-child(even) td {
+  background: #040a06;
+}
+
+.accent {
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+.dim {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Typing cursor */
+.typing-cursor::after {
+  content: '▌';
+  animation: blink .7s steps(1) infinite;
+  color: var(--accent-green);
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.blink {
+  animation: blink 1s steps(1) infinite;
+}
+
+/* Sources block */
+.sources-block {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+
+.sources-block summary {
+  cursor: pointer;
+  color: var(--accent-green-dim);
+}
+
+/* Boot message */
+.boot-msg .msg-body {
+  border-left: 2px solid var(--accent-green);
+  background: #030d05;
+}
+
+/* Error message */
+.message.error .msg-body {
+  border-left: 2px solid var(--accent-red);
+  color: var(--accent-red);
+}
+
+/* ── Input Area ────────────────────────────────── */
+#input-area {
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+  padding: 12px 16px;
+}
+
+#input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  padding: 8px 12px;
+  transition: border-color var(--transition);
+}
+
+#input-wrapper:focus-within {
+  border-color: var(--accent-green-dim);
+  box-shadow: 0 0 10px #00ff4112;
+}
+
+.prompt-symbol {
+  color: var(--accent-green);
+  font-size: 16px;
+  line-height: 1;
+  padding-bottom: 4px;
+  user-select: none;
+}
+
+#user-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  resize: none;
+  line-height: 1.5;
+  max-height: 140px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+#user-input::placeholder {
+  color: var(--text-muted);
+}
+
+#send-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-green);
+  color: #000;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+#send-btn:hover {
+  background: #00ff41cc;
+  box-shadow: 0 0 12px #00ff4160;
+}
+
+#send-btn:active {
+  transform: scale(0.97);
+}
+
+#send-btn:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+}
+
+#input-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-green-dim);
+  border-radius: 2px;
+}
+
+/* ── Scanline overlay (subtle CRT effect) ──────── */
+#app::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
+  pointer-events: none;
+  z-index: 2000;
+}
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 640px) {
+  #sidebar {
+    display: none;
+  }
+
+  .message {
+    max-width: 98%;
+  }
+}
+
+/* ── Loading Dots ──────────────────────────────── */
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.loading-dots span {
+  color: var(--accent-green);
+  font-size: 20px;
+  font-weight: bold;
+  animation: dotPulse 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* ── Code Copy Button ──────────────────────────── */
+.copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--accent-green-dim);
+  color: #000;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  opacity: 0;
+  transition: opacity var(--transition), background var(--transition);
+}
+
+pre:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn:hover {
+  background: var(--accent-green);
+}

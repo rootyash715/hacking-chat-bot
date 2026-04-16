@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HackBot AI — Cybersecurity Assistant</title>
+  <meta name="description" content="AI-powered cybersecurity hacking assistant for ethical hackers, CTF players, and pentesters." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Matrix Rain Canvas (Background) -->
+  <canvas id="matrix-canvas"></canvas>
+
+  <!-- App Shell -->
+  <div id="app">
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div id="sidebar-header">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">HackBot</span>
+      </div>
+      <button id="new-chat-btn" title="New Chat">+ New Session</button>
+      <div id="history-list">
+        <!-- Dynamically populated -->
+      </div>
+      <div id="sidebar-footer">
+        <span id="mode-label">MODE: EXPERT</span>
+        <select id="mode-select">
+          <option value="expert">Expert</option>
+          <option value="beginner">Beginner</option>
+          <option value="ctf">CTF</option>
+          <option value="oscp">OSCP</option>
+          <option value="redteam">Red Team</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main id="chat-container">
+
+      <!-- Top Bar -->
+      <header id="topbar">
+        <div id="topbar-left">
+          <span id="session-name">[ NEW SESSION ]</span>
+          <span id="status-dot" class="dot-green" title="Connected"></span>
+          <span id="status-text">ONLINE</span>
+        </div>
+        <div id="topbar-right">
+          <button id="clear-btn" title="Clear chat (Ctrl+L)">CLR</button>
+          <button id="toggle-sidebar-btn" title="Toggle sidebar">☰</button>
+        </div>
+      </header>
+
+      <!-- Messages -->
+      <div id="messages" role="log" aria-live="polite">
+        <!-- Boot message -->
+        <div class="message bot boot-msg">
+          <div class="msg-header">
+            <span class="label bot-label">[HACKBOT v1.0]</span>
+            <span class="timestamp" id="boot-time"></span>
+          </div>
+          <div class="msg-body">
+            <p>Initializing HackBot AI...</p>
+            <p>Knowledge base: <span class="accent">LOADED</span></p>
+            <p>LLM engine: <span class="accent">READY</span></p>
+            <p>Safety filter: <span class="accent">ACTIVE</span></p>
+            <p class="dim">For authorized security testing, CTF, and education only.</p>
+            <p class="blink">▌ Awaiting operator input...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div id="input-area">
+        <div id="input-wrapper">
+          <span class="prompt-symbol">$</span>
+          <textarea
+            id="user-input"
+            placeholder="Enter command or question..."
+            rows="1"
+            maxlength="4000"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          ></textarea>
+          <button id="send-btn" title="Send (Enter)">
+            <span>EXECUTE</span>
+            <span class="send-arrow">▶</span>
+          </button>
+        </div>
+        <div id="input-footer">
+          <span id="char-count">0 / 4000</span>
+          <span id="shortcut-hint">Enter to send · Shift+Enter for newline · Ctrl+L to clear</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
