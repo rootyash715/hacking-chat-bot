@@ -1,5 +1,6 @@
 """
-backend/chatbot.py — Core HackBot logic using LangChain (modernized)
+backend/chatbot.py — Minimalist HackBot AI core.
+Optimized for OpenRouter & simplified RAG integration.
 """
 import os
 import json
@@ -8,232 +9,141 @@ from pathlib import Path
 from typing import AsyncGenerator, Optional
 from dotenv import load_dotenv
 
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 
 load_dotenv()
 
-# ── Resolve project root paths ────────────────────────────
+# --- Path Configuration ---
 BACKEND_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BACKEND_DIR.parent
 PROMPTS_DIR = PROJECT_DIR / "prompts"
 
-MAX_HISTORY_TURNS = 10  # Keep last 10 exchanges in context
+MAX_HISTORY_TURNS = 10
 
-
-# ── LLM Provider Selection ────────────────────────────────
+# --- LLM Provider Selection (OpenRouter) ---
 def _build_llm():
-    try:
-        from langchain_ollama import ChatOllama
-        return ChatOllama(
-            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
-            model=os.getenv("OLLAMA_MODEL", "llama3"),
-            temperature=0.3,
-        )
-    except ImportError:
-        # Fallback to community package
-        from langchain_community.chat_models import ChatOllama as CommunityChatOllama
-        return CommunityChatOllama(
-            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
-            model=os.getenv("OLLAMA_MODEL", "llama3"),
-            temperature=0.3,
-        )
+    api_key   = os.getenv("OPENROUTER_API_KEY")
+    model_name = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001")
+    
+    if not api_key:
+        print("[!] Warning: OPENROUTER_API_KEY not found in environment.")
+        return None
 
+    return ChatOpenAI(
+        openai_api_base="https://openrouter.ai/api/v1",
+        openai_api_key=api_key,
+        model_name=model_name,
+        temperature=0.3,
+        default_headers={
+            "HTTP-Referer": "https://github.com/rootyash715/hacking-chat-bot",
+            "X-Title": "HackBot AI",
+        }
+    )
 
-# ── Safety Filter ─────────────────────────────────────────
-BLOCK_KEYWORDS = [
-    "hack my ex", "hack my wife", "hack my girlfriend", "hack my boyfriend",
-    "hack my boss", "hack my teacher", "hack my neighbor",
-    "deploy ransomware", "spread virus", "sell malware",
-    "create botnet for hire",
-]
+# --- Safety Filter ---
+BLOCK_KEYWORDS = ["hack my ex", "hack my wife", "hack my boss", "deploy ransomware"]
 
 def _is_blocked(message: str) -> bool:
     msg = message.lower()
     return any(kw in msg for kw in BLOCK_KEYWORDS)
 
-
-# ── Prompt Templates ──────────────────────────────────────
+# --- Prompts ---
 MODE_ADDONS = {
-    "beginner": "Explain all concepts from scratch. Assume zero prior knowledge.",
-    "expert":   "Skip basics. Be technically precise and concise.",
-    "ctf":      "Focus on CTF-specific techniques. Speed over stealth.",
-    "oscp":     "Follow OSCP methodology. Avoid automated exploitation frameworks.",
-    "redteam":  "Focus on stealth, persistence, and APT-style lateral movement.",
+    "beginner": "Explain concepts from scratch.",
+    "expert":   "Be technical and concise.",
+    "ctf":      "Focus on CTF flags and speed.",
+    "oscp":      "Follow OSCP methodology.",
 }
 
-# Load system prompt safely
+# --- Persona ---
 try:
     SYSTEM_PROMPT = (PROMPTS_DIR / "system_prompt.txt").read_text(encoding="utf-8")
 except FileNotFoundError:
-    SYSTEM_PROMPT = "You are HackBot — an elite AI assistant specialized in cybersecurity."
-    print("[!] system_prompt.txt not found, using fallback prompt")
+    SYSTEM_PROMPT = "You are HackBot, an elite cybersecurity AI."
 
 RAG_TEMPLATE = """{system_prompt}
-
-{mode_addon}
-
-Use the CONTEXT below to answer accurately. If context doesn't cover the answer, use your knowledge but say so.
+Mode: {mode_addon}
 
 CONTEXT:
 {context}
 
-Chat History:
+History:
 {chat_history}
 
 Operator: {question}
 HackBot:"""
 
 FALLBACK_TEMPLATE = """{system_prompt}
+Mode: {mode_addon}
 
-{mode_addon}
-
-Chat History:
+History:
 {chat_history}
 
 Operator: {question}
 HackBot:"""
 
+def _format_history(messages: list) -> str:
+    recent = messages[-20:] # Last 10 exchanges
+    return "\n".join([f"{'Operator' if m['role'] == 'user' else 'AI'}: {m['content']}" for m in recent])
 
-# ── Simple Chat History Manager (replaces deprecated Memory) ─
-def _format_history(messages: list, max_turns: int = MAX_HISTORY_TURNS) -> str:
-    """Format the last N message pairs as a string for the prompt."""
-    # Keep the last `max_turns * 2` messages (pairs of user + assistant)
-    recent = messages[-(max_turns * 2):]
-    lines = []
-    for msg in recent:
-        role = "Operator" if msg["role"] == "user" else "HackBot"
-        lines.append(f"{role}: {msg['content']}")
-    return "\n".join(lines)
-
-
-# ── HackBot Class ─────────────────────────────────────────
+# --- HackBot Core ---
 class HackBot:
     def __init__(self, retriever=None):
-        self.llm = None
+        self.llm = _build_llm()
         self.retriever = retriever
-        self._sessions: dict[str, list] = {}   # session_id → message list
-        self._llm_error = None
+        self._sessions = {} # session_id -> list of messages
 
-        # Try to initialize LLM — graceful failure
-        try:
-            self.llm = _build_llm()
-            model = os.getenv("OLLAMA_MODEL", "llama3")
-            print(f"[✓] Local LLM (Ollama) initialized: {model}")
-        except Exception as e:
-            self._llm_error = str(e)
-            print(f"[!] LLM initialization failed: {e}")
-            print("    The server will start, but chat will return errors until LLM is available.")
-
-    def _build_prompt(self, mode: str, has_context: bool) -> PromptTemplate:
-        addon = MODE_ADDONS.get(mode, MODE_ADDONS["expert"])
-        template = RAG_TEMPLATE if has_context else FALLBACK_TEMPLATE
-        input_vars = ["chat_history", "question"]
-        if has_context:
-            input_vars.append("context")
-        return PromptTemplate(
-            input_variables=input_vars,
-            template=template
-        ).partial(mode_addon=addon, system_prompt=SYSTEM_PROMPT)
+        if self.llm:
+            print(f"[INFO] ChatBot initialized with {os.getenv('OPENROUTER_MODEL')}")
+        else:
+            print("[ERROR] Failed to initialize LLM. Check API Key.")
 
     async def chat(self, message: str, session_id: str, mode: str = "expert"):
-        # Safety check
         if _is_blocked(message):
-            return (
-                "⛔ HackBot cannot assist with that request. "
-                "This tool is for authorized ethical hacking and education only.",
-                []
-            )
+            return "Blocked: Ethical policy violation.", []
 
-        # Check if LLM is available
-        if self.llm is None:
-            return (
-                f"⚠️ LLM is not available. Error: {self._llm_error}\n\n"
-                "**To fix this:**\n"
-                "- Make sure Ollama is running (`ollama serve`) and the model is pulled (`ollama pull llama3`)",
-                []
-            )
+        if not self.llm:
+            return "API Key missing or invalid.", []
 
-        # Retrieve context from knowledge base
-        docs = []
-        context = ""
-        sources = []
+        # RAG Retrieval
+        context, sources = "", []
         if self.retriever:
             try:
                 docs = self.retriever.invoke(message)
-                context = "\n\n".join([d.page_content for d in docs]) if docs else ""
-                sources = [{"title": d.metadata.get("source", "unknown"), "chunk": d.page_content[:200]} for d in docs]
+                context = "\n\n".join([d.page_content for d in docs])
+                sources = [{"title": d.metadata.get("source", "kb"), "chunk": d.page_content[:150]} for d in docs]
             except Exception as e:
-                print(f"[!] RAG retrieval failed: {e}")
+                print(f"[WARN] RAG failed: {e}")
 
-        # Build prompt
-        prompt = self._build_prompt(mode, has_context=bool(context))
+        # Prompt & History
+        history_str = _format_history(self._sessions.get(session_id, []))
+        template = RAG_TEMPLATE if context else FALLBACK_TEMPLATE
+        full_prompt = template.format(
+            system_prompt=SYSTEM_PROMPT,
+            mode_addon=MODE_ADDONS.get(mode, ""),
+            context=context,
+            chat_history=history_str,
+            question=message
+        )
 
-        # Get chat history as formatted string
-        session_messages = self._sessions.get(session_id, [])
-        chat_history = _format_history(session_messages)
-
-        # Build and run the chain using modern LCEL
         try:
-            chain = prompt | self.llm
-            inputs = {"question": message, "chat_history": chat_history}
-            if context:
-                inputs["context"] = context
-
-            result = await asyncio.to_thread(chain.invoke, inputs)
-
-            # Extract text from result (handles both string and AIMessage)
-            if hasattr(result, 'content'):
-                result_text = result.content
-            else:
-                result_text = str(result)
-
+            # Simple direct invoke
+            result = await asyncio.to_thread(self.llm.invoke, full_prompt)
+            result_text = result.content if hasattr(result, "content") else str(result)
         except Exception as e:
-            error_msg = str(e)
-            if "connection" in error_msg.lower() or "refused" in error_msg.lower():
-                result_text = (
-                    "⚠️ Cannot connect to the LLM. Make sure Ollama is running "
-                    "(`ollama serve`)."
-                )
-            else:
-                result_text = f"⚠️ LLM Error: {error_msg}"
-            return result_text, []
+            return f"Error connecting to OpenRouter: {e}", []
 
-        # Store in session history
-        if session_id not in self._sessions:
-            self._sessions[session_id] = []
-        self._sessions[session_id].append({"role": "user",      "content": message})
+        # Save History
+        if session_id not in self._sessions: self._sessions[session_id] = []
+        self._sessions[session_id].append({"role": "user", "content": message})
         self._sessions[session_id].append({"role": "assistant", "content": result_text})
 
         return result_text.strip(), sources
 
     async def stream_response(self, message: str, session_id: str, mode: str = "expert") -> AsyncGenerator[str, None]:
-        """Yield SSE tokens"""
-        if _is_blocked(message):
-            yield f"data: {json.dumps({'token': '⛔ Blocked by safety filter.'})}\n\n"
-            yield f"data: {json.dumps({'done': True, 'sources': []})}\n\n"
-            return
-
-        response, sources = await self.chat(message, session_id, mode)
-
-        # Stream word by word for typing effect
-        for token in response.split(" "):
+        res, sources = await self.chat(message, session_id, mode)
+        for token in res.split(" "):
             yield f"data: {json.dumps({'token': token + ' '})}\n\n"
-            await asyncio.sleep(0.02)
-
+            await asyncio.sleep(0.01)
         yield f"data: {json.dumps({'done': True, 'sources': sources})}\n\n"
-
-    def get_history(self, session_id: str) -> Optional[list]:
-        return self._sessions.get(session_id)
-
-    def clear_history(self, session_id: str):
-        self._sessions.pop(session_id, None)
-
-    def list_knowledge(self) -> dict:
-        if self.retriever:
-            try:
-                vectorstore = self.retriever.vectorstore
-                count = vectorstore._collection.count()
-                return {"documents": [], "total_chunks": count}
-            except Exception:
-                pass
-        return {"documents": [], "note": "Knowledge base not loaded or empty"}

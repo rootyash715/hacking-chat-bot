@@ -1,5 +1,5 @@
 /**
- * app.js — HackBot AI Frontend Logic (Enhanced)
+ * app.js — Heisenbug Protocol Frontend Logic
  */
 /* global marked, hljs */
 
@@ -21,7 +21,7 @@ let inputHistory = [];
 let inputHistoryIdx = -1;
 let isLoading = false;
 let isBackendOnline = false;
-let sessions = JSON.parse(localStorage.getItem('hackbot_sessions') || '{}');
+let sessions = JSON.parse(localStorage.getItem('heisenbug_sessions') || '{}');
 
 // ── DOM References ────────────────────────────────────────
 const messagesEl = document.getElementById('messages');
@@ -32,11 +32,15 @@ const newChatBtn = document.getElementById('new-chat-btn');
 const modeSelect = document.getElementById('mode-select');
 const historyList = document.getElementById('history-list');
 const sessionNameEl = document.getElementById('session-name');
-const charCountEl = document.getElementById('char-count');
 const sidebarEl = document.getElementById('sidebar');
 const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
+
+// Start Screen elements
+const startScreen = document.getElementById('start-screen');
+const chatScreen = document.getElementById('chat-screen');
+const startBtn = document.getElementById('start-btn');
 
 // ── Init ──────────────────────────────────────────────────
 document.getElementById('boot-time').textContent = timestamp();
@@ -44,6 +48,19 @@ renderHistoryList();
 if (CONFIG.MATRIX_ENABLED) initMatrixRain();
 checkBackendHealth();
 setInterval(checkBackendHealth, CONFIG.HEALTH_CHECK_INTERVAL);
+
+// ── Start Protocol Transition ─────────────────────────────
+startBtn.addEventListener('click', () => {
+    startScreen.style.opacity = '0';
+    startScreen.style.transform = 'scale(1.1)';
+    
+    setTimeout(() => {
+        startScreen.classList.add('hidden');
+        chatScreen.classList.remove('hidden');
+        chatScreen.classList.add('revealing');
+        inputEl.focus();
+    }, 800);
+});
 
 // ── Health Check ──────────────────────────────────────────
 async function checkBackendHealth() {
@@ -99,8 +116,8 @@ function initMatrixRain() {
     function draw() {
         ctx.fillStyle = 'rgba(8, 13, 10, 0.05)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#00ff41';
-        ctx.font = '13px Fira Code, monospace';
+        ctx.fillStyle = '#00f5d4';
+        ctx.font = '13px "Space Grotesk", monospace';
         drops.forEach((y, i) => {
             const ch = chars[Math.floor(Math.random() * chars.length)];
             ctx.fillText(ch, i * 14, y * 14);
@@ -138,7 +155,7 @@ function renderMessage(role, text, sources = []) {
     header.className = 'msg-header';
     const label = document.createElement('span');
     label.className = `label ${role === 'bot' ? 'bot-label' : role === 'error' ? '' : 'user-label'}`;
-    label.textContent = role === 'bot' ? '[HACKBOT]' : role === 'error' ? '[ERROR]' : '[YOU]';
+    label.textContent = role === 'bot' ? '[HEISENBUG]' : role === 'error' ? '[ERROR]' : '[YOU]';
     const ts = document.createElement('span');
     ts.className = 'timestamp';
     ts.textContent = timestamp();
@@ -198,7 +215,7 @@ function showLoading() {
     header.className = 'msg-header';
     const label = document.createElement('span');
     label.className = 'label bot-label';
-    label.textContent = '[HACKBOT]';
+    label.textContent = '[HEISENBUG]';
     const ts = document.createElement('span');
     ts.className = 'timestamp';
     ts.textContent = timestamp();
@@ -359,7 +376,7 @@ async function sendMessage() {
     sendBtn.disabled = true;
     sendBtn.querySelector('span:first-child').textContent = 'SENDING...';
     inputEl.value = '';
-    charCountEl.textContent = '0 / 4000';
+    // charCountEl.textContent = '0 / 4000'; // Removed in HTML
     autoResize();
 
     // Track input history
@@ -393,7 +410,7 @@ function saveToSession(userMsg, botMsg) {
     if (!sessions[sessionId]) sessions[sessionId] = { name: userMsg.slice(0, 35), messages: [] };
     sessions[sessionId].messages.push({ role: 'user', content: userMsg });
     sessions[sessionId].messages.push({ role: 'bot', content: botMsg });
-    localStorage.setItem('hackbot_sessions', JSON.stringify(sessions));
+    localStorage.setItem('heisenbug_sessions', JSON.stringify(sessions));
 }
 
 function renderHistoryList() {
