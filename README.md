@@ -1,12 +1,14 @@
-# 🤖 AI Hacking Chatbot
+# 🌐 Heisenbug Protocol — Cybersecurity AI Assistant
 
 > **⚠️ ETHICAL USE ONLY** — This tool is designed exclusively for **authorized penetration testing**, **CTF competitions**, **bug bounty hunting**, and **cybersecurity education**. Using this against systems without explicit written permission is illegal.
 
 ---
 
-## 📌 What Is This?
+## 📌 Protocol Overview
 
-An AI-powered chatbot specialized in **offensive and defensive cybersecurity**. It acts as your personal hacking assistant — trained on security frameworks (MITRE ATT&CK, OWASP, CVE data), capable of explaining exploits, generating payloads for practice environments, and guiding you through penetration testing workflows.
+The **Heisenbug Protocol** is a premium, AI-powered hacking assistant specialized in **offensive and defensive cybersecurity**. It acts as your personal SOC companion — trained on security frameworks (MITRE ATT&CK, OWASP, CVE data), capable of explaining exploits, and guiding you through advanced penetration testing workflows.
+
+The system is built on the philosophy that **detection alters the observed**, providing a sleek, stealthy, and high-performance terminal interface for ethical hackers.
 
 ---
 
@@ -14,91 +16,56 @@ An AI-powered chatbot specialized in **offensive and defensive cybersecurity**. 
 
 | Feature | Description |
 |---|---|
-| 🧠 LLM-Powered | Uses GPT-4 / Llama3 / Mistral for deep contextual understanding |
-| 📚 RAG Knowledge Base | Retrieves from CVEs, MITRE ATT&CK, OWASP, HackTricks |
-| 🕵️ Recon Assistant | Guides Nmap, Shodan, Sublist3r, Amass workflows |
-| 💥 Exploit Explainer | Explains BoF, SQLi, XSS, LFI, RFI, XXE, SSRF in depth |
-| 🔐 Payload Generator | Creates payloads for CTF/lab environments |
-| 🐚 Shell Helper | Guides reverse/bind shell creation across platforms |
-| 📝 Report Writer | Auto-generates pentest report sections |
-| 🌐 Hacker-Themed UI | Dark matrix-green terminal aesthetic |
+| 🧠 Neural Core | Powered by OpenRouter (Gemini 2.0 / GPT-4) for state-of-the-art hacking logic |
+| 📚 Abyssal Knowledge | RAG-powered retrieval from CVEs, MITRE ATT&CK, and HackTricks |
+| 🕵️ Advanced Recon | Guidance for Nmap, Shodan, and automated subdomain enumeration |
+| 💥 Vulnerability Lab | Deep explanations of SQLi, XSS, SSRF, and kernel exploits |
+| 🐚 Shell Matrix | Optimized payloads for multi-platform reverse shells |
+| 🌐 Cinematic UI | "Abyssal Green" design system with fluid terminal transitions |
 
 ---
 
-## 🗂️ Project Structure
+## 🚀 Quick Start (Local Setup)
 
-```
-hacking chat bot/
-├── docs/                        # All documentation
-│   ├── architecture.md          # System architecture
-│   ├── api-docs.md              # Backend API reference
-│   ├── frontend-guide.md        # Frontend UI documentation
-│   ├── prompt-engineering.md    # Prompt engineering guide
-│   ├── rag-knowledge-base.md    # RAG & knowledge base setup
-│   ├── security-ethics.md       # Security & ethics guidelines
-│   └── setup-deployment.md      # Installation & deployment guide
-├── backend/                     # Python FastAPI backend
-│   ├── main.py                  # Entry point
-│   ├── chatbot.py               # Core chatbot logic
-│   ├── rag_pipeline.py          # RAG retrieval pipeline
-│   ├── knowledge_base/          # Vector store & documents
-│   └── requirements.txt         # Python dependencies
-├── frontend/                    # Web frontend
-│   ├── index.html               # Main HTML
-│   ├── style.css                # Hacker-themed styles
-│   └── app.js                   # Frontend JavaScript
-├── prompts/                     # System prompts
-│   └── system_prompt.txt        # Core AI persona prompt
-├── .env.example                 # Environment variable template
-└── README.md                    # This file
-```
+Follow these steps to initialize the protocol on your local machine:
 
----
-
-## 🚀 Quick Start
-
+### 1. Initialize Repository
 ```bash
-# 1. Clone / navigate to project
-cd "hacking chat bot"
+git clone https://github.com/rootyash715/hacking-chat-bot
+cd hacking-chat-bot
+```
 
-# 2. Set up Python backend
+### 2. Configure Backend
+Ensure you have Python 3.11+ installed.
+```bash
 cd backend
 pip install -r requirements.txt
-
-# 3. Configure environment
-cp ../.env.example ../.env
-# Customise .env as needed
-
-# 4. Start the backend
-python main.py
-
-# 5. Open frontend
-# Open frontend/index.html in a browser (or serve it)
 ```
 
----
+### 3. Environment Setup
+Create a `.env` file in the root directory (copy from `.env.example`).
+**IMPORTANT**: You will need an **OpenRouter API Key** to power the AI core.
 
-## 📖 Documentation Index
+1.  Get a key at [openrouter.ai](https://openrouter.ai/keys).
+2.  Add it to `.env`: `OPENROUTER_API_KEY=your_key_here`.
 
-| Document | Purpose |
-|---|---|
-| [Architecture](docs/architecture.md) | Full system design & data flow |
-| [API Docs](docs/api-docs.md) | Backend endpoints & request/response formats |
-| [Frontend Guide](docs/frontend-guide.md) | UI components & customization |
-| [Prompt Engineering](docs/prompt-engineering.md) | How to craft system prompts |
-| [RAG Knowledge Base](docs/rag-knowledge-base.md) | Setting up the vector DB & knowledge |
-| [Security & Ethics](docs/security-ethics.md) | Guardrails, safety, and legal use |
-| [Setup & Deployment](docs/setup-deployment.md) | Full installation guide |
+### 4. Ignite System
+```bash
+python main.py
+```
+
+### 5. Access Terminal
+Open `frontend/index.html` in your browser (or serve it locally). Click **INITIALIZE PROTOCOL** to begin the session.
 
 ---
 
 ## 🧑‍💻 Tech Stack
 
-- **Backend**: Python 3.11+ · FastAPI · LangChain
-- **AI Models**: Ollama (Llama3, Mistral) locally
-- **Vector DB**: ChromaDB / FAISS
-- **Frontend**: HTML · CSS · Vanilla JS (Matrix hacker theme)
-- **Embeddings**: `all-MiniLM-L6-v2` locally via SentenceTransformers
+- **Neural Hub**: OpenRouter (Google Gemini 2.0 Flash / OpenAI GPT-4)
+- **Framework**: Python 3.11+ · FastAPI · LangChain
+- **Vector DB**: ChromaDB (stored in `backend/knowledge_base/chroma_db`)
+- **Frontend**: Vanilla HTML5 · CSS3 (Abyssal Green Design) · JS ES6
+- **Embeddings**: Local `all-MiniLM-L6-v2` for low-latency context matching
 
 ---
 
